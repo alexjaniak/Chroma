@@ -1,5 +1,6 @@
-# modules & enviroment
+# modules & environment
 env
+.env
 
 # macOS files
 .DS_Store
