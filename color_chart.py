@@ -1,4 +1,5 @@
-"""generates a color-chart used for data collection"""
+#generates a color-chart used for data collection
+# 1-20-21
 
 # == imports ==
 import string
@@ -36,27 +37,36 @@ def hsl_to_rgb(h: 'hue', s: 'saturation', l: 'lightness') -> '[r,g,b]':
 
 # display a grid of colors using mpl subplots
 # originally designed for a jupyter notebook 
-def plot_colors(colors: '[[r,g,b]]', grid:'(rows,cols)' = (1,1), axis = True, save_path=None):
-    
-    # if single cell 
-    if grid == (1,1):
+def plot_colors(colors: '[[r,g,b]]', grid:'(rows,cols)' = (1,1), axis:bool = True, save_path:str=None):
+    # assumed rows*cols == len(colors)
+    if grid == (1,1): # if single cell 
         plt.imshow([[colors[0]]])
         plt.axis('off')
         
     else:
-        # assumed rows*cols == len(colors)
         i = 0
         nrows, ncols = grid
         fig, axs = plt.subplots(nrows, ncols)
         col_labels = list(string.ascii_lowercase)
         row_labels = list(range(1,nrows+1))
-        
-        # if single col or row
-        if nrows == 1 or ncols == 1: 
+    
+        if nrows == 1 or ncols == 1: # if single col or row
             nimgs = ncols if nrows == 1 else nrows
             for imgx in range(nimgs):
-                axs[imgx].imshow([[colors[i]]])
-                if not axis: axs[imgx].axis('off')
+                ax = axs[imgx]
+                ax.imshow([[colors[i]]])
+                if not axis: ax.axis('off') 
+                else: # include axis 
+                    ax.tick_params(axis='both', which='both',length=0)
+                    if nrows == 1:
+                        ax.set_xticks([0])
+                        ax.set_xticklabels([col_labels[imgx]])
+                        ax.xaxis.tick_top()
+                        ax.set_yticklabels([])
+                    else:
+                        ax.set_yticks([0])
+                        ax.set_yticklabels([row_labels[imgx]])
+                        ax.set_xticklabels([])
                 i += 1
         else:
             for rowx in range(nrows):
@@ -65,7 +75,7 @@ def plot_colors(colors: '[[r,g,b]]', grid:'(rows,cols)' = (1,1), axis = True, sa
                     ax.imshow([[colors[i]]])
                     
                     if not axis: ax.axis('off')
-                    else: 
+                    else: # include axis
                         ax.tick_params(axis='both', which='both',length=0)
                         ax.set_xticks([0])
                         ax.set_yticks([0])
@@ -86,14 +96,15 @@ def plot_colors(colors: '[[r,g,b]]', grid:'(rows,cols)' = (1,1), axis = True, sa
     if save_path: plt.savefig(save_path, dpi=300)
     plt.show()
 
-# == main ==
-main_colors = []
+# == main == 
+colors = []
 ncols = 15 #14 color cols & 1 gray-scale col
 nrows = 10
 hue = np.linspace(0,350, num = ncols-1) # red - magenta/pink
 light = np.linspace(0.1,0.9, num = nrows)
 
 # main colors
+main_colors = []
 for l in light:
     for h in hue:
         main_colors.append(hsl_to_rgb(h,1,l))
@@ -105,7 +116,6 @@ for l in np.linspace(0,1, num = nrows):
 
 # concatenate
 # note: colors is a 1d item array
-colors = []
 i = 0
 for rowx in range(nrows):
     for colx in range(ncols):
