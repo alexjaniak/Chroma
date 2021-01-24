@@ -1,7 +1,11 @@
 # modules & environment
 env
 .env
+__pycache__
 
 # macOS files
 .DS_Store
 
+# other 
+.ipynb_checkpoints
+.cache-polishguy12
