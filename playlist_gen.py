@@ -1,10 +1,14 @@
 # splits, creates, & populates playlist for data collection
+# creates forms for data collection
 # 1-23-21
 
 # == imports == #
 import os
 import spotipy 
 import pandas as pd
+from numpy import array_split
+from openpyxl import load_workbook
+from openpyxl.styles import Font, Alignment
 
 # == main == #
 # env variables
@@ -24,14 +28,18 @@ token = spotipy.util.prompt_for_user_token(
 sp = spotipy.Spotify(auth=token)
 user = sp.current_user()
 
+# import playlist data
+pl_path = 'classical_essentials'
+pl_df = pd.read_csv(pl_path, index_col=0)
+
 # create & populate playlists 
 playlist_count = 5
-playlists = np.array_split(ce_df,playlist_count)
+playlists = array_split(pl_df,playlist_count)
 
-for i in range(playlist_count):
+for ix in range(playlist_count):
     playlist = sp.user_playlist_create(
         user = user['id'],
-        name = f'ce_{i+1}',
+        name = f'ce_{ix+1}',
         public = False,
         collaborative=False,
         description=''
@@ -41,6 +49,20 @@ for i in range(playlist_count):
         playlist_id = playlist['id'],
         tracks = playlists[i]['id'] # track ids
     )
+    
+    # create forms for survey
+    playlists[ix].name = playlists[ix].name.apply(lambda x: x[:30]) # shorten names
+    xlsx_path = f'forms/ce_{ix+1}.xlsx'
+    playlists[ix][['name']].to_excel(xlsx_path, index=False)
 
-    playlists[i].name = playlists[i].name.apply(lambda x: x[:30]) # shorten names
-    playlists[i][['name']].to_excel(f'forms/ce_{i+1}.xlsx', index=False)
+    # create column for color input 
+    wb = load_workbook(filename=xlsx_path)
+    ws = wb.active
+    ws.column_dimensions['A'].width = 30
+    ws.column_dimensions['B'].width = 10
+    b1 = ws['B1']
+    b1.value = "Color" 
+    b1.font = Font(bold=True)
+    b1.alignment = Alignment(horizontal="center")
+    wb.save(xlsx_path)
+

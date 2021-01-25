@@ -25,29 +25,35 @@ class SpotifyTools:
     @classmethod
     def get_playlist(cls,_id:int, sp: spotipy.Spotify) -> pd.DataFrame:
 
-        _playlist = sp.playlist_tracks(_id) # fetch playlist
+        _playlist = sp.playlist_tracks(_id, market='US') # fetch playlist
         track_count = _playlist['total']
         
         # 100 item limit per request
         while track_count != len(_playlist['items']):
-            batch = sp.playlist_tracks(_id, offset = len(_playlist['items']))
+            batch = sp.playlist_tracks(_id, offset = len(_playlist['items']), market='US')
             _playlist['items'].extend(batch['items'])
-        
+
+        # removes tracks that are unplayable in the US market
         items = _playlist['items']
+        items[:] = [item for item in items if item['track']['is_playable']]
+        track_count -= track_count-len(items)
+
+        # get specific features
         tracks = cls.get_obj(items,'track')
         artists = cls.get_obj(tracks,'artists')
-        
-        artist_names = []
+
+        artist_names = [] #mutliple artists per track
         for ix in range(track_count):
-            z = []
+            z = [] 
             for jx in range(len(artists[ix])):
                 z.append(artists[ix][jx]['name'])
             artist_names.append(z)
         
+        # return pandas DF with selected fatures
         return pd.DataFrame({
             'name': cls.get_obj(tracks,'name'),
             'artist_name': artist_names,
-            'id': cls.get_obj(tracks,'id')
+            'id': cls.get_obj(tracks,'id'),
         })
 
     # returns audio features given a list of track ids
